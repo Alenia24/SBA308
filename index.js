@@ -76,21 +76,28 @@ const LearnerSubmissions = [
   },
 ];
 
+//If an AssignmentGroup does not belong to its course throw an error
+
 function validateErrors(course, ag, submissions) {
   if (ag.course_id !== course.id) {
     throw new Error(
       "Invalid input! AssignmentGroup does not belong to this course!"
     );
   }
-  submissions.forEach((submission) => {
+  // If points_possible is 0, or less tnan 0 throw an error
+  ag.assignments.forEach((assignment) => {
     if (
-      typeof submission.submission.score !== "number" ||
-      submission.submission.score < 0
+      typeof assignment.points_possible !== "number" ||
+      assignment.points_possible < 0
     ) {
-      throw new Error("Invalid score! Score must be more than 0!");
+      throw new Error(
+        "Invalid points_possible! Possible Points must be more than 0!"
+      );
     }
-    if (submission.submission.score === 0) {
-      throw new Error("Invalid score! Score must be greater than 0!");
+    if (assignment.points_possible === 0) {
+      throw new Error(
+        "Invalid possible_points! Possible Points must be greater than 0!"
+      );
     }
   });
 }
@@ -132,30 +139,38 @@ function getAssignmentScores(ag, submissions) {
       for (let j = 0; j < assignments.length; j++) {
         //match the submission assignment id with assignments due id to only get assignments that are due
         if (submissions[i].assignment_id === assignments[j].id) {
+          // match the learner to the submission
           if (leaner === submissions[i].learner_id) {
+            // Determine if an assignment is late
             if (
               submissions[i].submission.submitted_at > assignments[j].due_at
             ) {
+              //calculate the score earned for learner
               let penalty = 0;
+              // Calculate penalty
               penalty = (10 * assignments[j].points_possible) / 100;
+              // Save assignment score
               let score =
                 (submissions[i].submission.score - penalty) /
                 assignments[j].points_possible;
+              // Convert score to 3 significant figures and convert it from String
               score = parseFloat(score.toPrecision(3));
+              // Add score to learner Score Array to use later in result
               learnerScore.push(score);
             } else {
-              //calculate the total score earned for learner
-              // Add assignent 1 and assignment 2 score to assignmentsScores Array
+              //calculate the score earned for learner
               let score =
                 submissions[i].submission.score /
                 assignments[j].points_possible;
+              // Convert score to 3 significant figures and convert it from String
               score = parseFloat(score.toPrecision(3));
+              // Add score to learner Score Array to use later in result
               learnerScore.push(score);
             }
           }
         }
       }
-    }
+    } // Reset total Score to get another learner scores
     totalScore = 0;
     assignmentScores.push(learnerScore);
   });
@@ -219,9 +234,13 @@ function getWeightedAverage(ag, submissions) {
   let learnerAverage = 0;
   let average = [];
 
+  // Iterate over total scores
   for (let i = 0; i < totalScore.length; i++) {
+    // Calculate average
     learnerAverage = totalScore[i] / totalPointsPossible;
+    // Add average to average array
     average.push(learnerAverage);
+    // Reset learner Average in order to calculate for another learner
     learnerAverage = 0;
   }
 
@@ -229,25 +248,32 @@ function getWeightedAverage(ag, submissions) {
 }
 
 function getLearnerData(course, ag, submissions) {
-  validateErrors(course, ag, submissions);
+  try {
+    validateErrors(course, ag, submissions);
 
-  const result = [];
+    const result = [];
 
-  const learnerIDs = getLearnersID(submissions);
-  const average = getWeightedAverage(ag, submissions);
-  const scores = getAssignmentScores(ag, submissions);
+    const learnerIDs = getLearnersID(submissions);
+    const average = getWeightedAverage(ag, submissions);
+    const scores = getAssignmentScores(ag, submissions);
 
-  for (let i = 0; i < learnerIDs.length; i++) {
-    const learnerObject = {};
-    let k = 0;
-    learnerObject.id = learnerIDs[i];
-    learnerObject.avg = average[i];
-    learnerObject.one = scores[i][k++];
-    learnerObject.two = scores[i][k++];
+    // Iterate over each learner
+    for (let i = 0; i < learnerIDs.length; i++) {
+      const learnerObject = {};
+      let k = 0;
+      // Add Keys and values to learner object
+      learnerObject.id = learnerIDs[i];
+      learnerObject.avg = average[i];
+      learnerObject.one = scores[i][k++];
+      learnerObject.two = scores[i][k++];
 
-    result.push(learnerObject);
+      //Push the learnerObject to the results before mooving on to next learner
+      result.push(learnerObject);
+    }
+    console.log(result);
+  } catch(error) {
+    console.log(error);
   }
-  console.log(result);
 }
 
 const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
