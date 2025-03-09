@@ -177,11 +177,12 @@ function getAssignmentScores(ag, submissions) {
   return assignmentScores;
 }
 
-//get score by Id
+//get total score by
 function getScore(submissions, ag) {
   const leanersID = getLearnersID(submissions);
   let assignments = getAssignmentsDue(ag);
   let totalScore = 0;
+  let islate = false;
   let assignmentScores = [];
   let scores = [];
 
@@ -195,6 +196,7 @@ function getScore(submissions, ag) {
             if (
               submissions[i].submission.submitted_at > assignments[j].due_at
             ) {
+              islate = true;
               let penalty = 0;
               penalty = (10 * assignments[j].points_possible) / 100;
               totalScore += submissions[i].submission.score - penalty;
@@ -271,7 +273,7 @@ function getLearnerData(course, ag, submissions) {
       result.push(learnerObject);
     }
     console.log(result);
-  } catch(error) {
+  } catch (error) {
     console.log(error);
   }
 }
