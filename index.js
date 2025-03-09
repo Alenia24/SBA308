@@ -76,6 +76,25 @@ const LearnerSubmissions = [
   },
 ];
 
+function validateErrors(course, ag, submissions) {
+  if (ag.course_id !== course.id) {
+    throw new Error(
+      "Invalid input! AssignmentGroup does not belong to this course!"
+    );
+  }
+  submissions.forEach((submission) => {
+    if (
+      typeof submission.submission.score !== "number" ||
+      submission.submission.score < 0
+    ) {
+      throw new Error("Invalid score! Score must be more than 0!");
+    }
+    if (submission.submission.score === 0) {
+      throw new Error("Invalid score! Score must be greater than 0!");
+    }
+  });
+}
+
 // Get the leaners id
 function getLearnersID(submissions) {
   // Use map to iterate the submissions array then return all learn_id
@@ -93,7 +112,7 @@ function getLearnersID(submissions) {
 
 // Get the assignments that are due
 function getAssignmentsDue(ag) {
-  let currentDate = new Date();
+  const currentDate = new Date();
   // Filter the Assignment group assignment objects and return assignments that are due
   return ag.assignments.filter((assignment) => {
     // Used  new Date String because right now it is a string , so I need it to match my current date variable data type which is an object in order to compare it
@@ -145,7 +164,7 @@ function getAssignmentScores(ag, submissions) {
 
 //get score by Id
 function getScore(submissions, ag) {
-  let leanersID = getLearnersID(submissions);
+  const leanersID = getLearnersID(submissions);
   let assignments = getAssignmentsDue(ag);
   let totalScore = 0;
   let assignmentScores = [];
@@ -210,15 +229,16 @@ function getWeightedAverage(ag, submissions) {
 }
 
 function getLearnerData(course, ag, submissions) {
+  validateErrors(course, ag, submissions);
+
   const result = [];
 
   const learnerIDs = getLearnersID(submissions);
-  let average = getWeightedAverage(ag, submissions);
-  let scores = getAssignmentScores(ag, submissions);
-  let scoresObj = {};
+  const average = getWeightedAverage(ag, submissions);
+  const scores = getAssignmentScores(ag, submissions);
 
   for (let i = 0; i < learnerIDs.length; i++) {
-    let learnerObject = {};
+    const learnerObject = {};
     let k = 0;
     learnerObject.id = learnerIDs[i];
     learnerObject.avg = average[i];
