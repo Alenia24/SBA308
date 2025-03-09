@@ -101,6 +101,48 @@ function getAssignmentsDue(ag) {
   });
 }
 
+function getAssignmentScores(ag, submissions) {
+  let leanersID = getLearnersID(submissions);
+  let assignments = getAssignmentsDue(ag);
+  let assignmentScores = [];
+
+  // Iterate through each learner, submission, assignments due
+  leanersID.forEach((leaner) => {
+    let learnerScore = [];
+    for (let i = 0; i < submissions.length; i++) {
+      for (let j = 0; j < assignments.length; j++) {
+        //match the submission assignment id with assignments due id to only get assignments that are due
+        if (submissions[i].assignment_id === assignments[j].id) {
+          if (leaner === submissions[i].learner_id) {
+            if (
+              submissions[i].submission.submitted_at > assignments[j].due_at
+            ) {
+              let penalty = 0;
+              penalty = (10 * assignments[j].points_possible) / 100;
+              let score =
+                (submissions[i].submission.score - penalty) /
+                assignments[j].points_possible;
+              score = parseFloat(score.toPrecision(3));
+              learnerScore.push(score);
+            } else {
+              //calculate the total score earned for learner
+              // Add assignent 1 and assignment 2 score to assignmentsScores Array
+              let score =
+                submissions[i].submission.score /
+                assignments[j].points_possible;
+              score = parseFloat(score.toPrecision(3));
+              learnerScore.push(score);
+            }
+          }
+        }
+      }
+    }
+    totalScore = 0;
+    assignmentScores.push(learnerScore);
+  });
+  return assignmentScores;
+}
+
 //get score by Id
 function getScore(submissions, ag) {
   let leanersID = getLearnersID(submissions);
@@ -122,12 +164,13 @@ function getScore(submissions, ag) {
               let penalty = 0;
               penalty = (10 * assignments[j].points_possible) / 100;
               totalScore += submissions[i].submission.score - penalty;
+              assignmentScores.push(submissions[i].submission.score - penalty);
             } else {
               //calculate the total score earned for learner
               totalScore += submissions[i].submission.score;
+              // Add assignent 1 and assignment 2 score to assignmentsScores Array
+              assignmentScores.push(submissions[i].submission.score);
             }
-            // Add assignent 1 and assignment 2 score to assignmentsScores Array
-            assignmentScores.push(submissions[i].submission.score);
           }
         }
       }
@@ -167,51 +210,24 @@ function getWeightedAverage(ag, submissions) {
 }
 
 function getLearnerData(course, ag, submissions) {
-  // here, we would process this data to achieve the desired result.
+  const result = [];
 
-  // console.log(getLearnersID(submissions));
-  // console.log(getAssignmentsDue(ag));
-  // console.log(getScore(submissions, ag));
-  // console.log(getTotalPossiblePoints(ag));
-  // console.log(getWeightedAverage(ag, submissions));
-  
+  const learnerIDs = getLearnersID(submissions);
+  let average = getWeightedAverage(ag, submissions);
+  let scores = getAssignmentScores(ag, submissions);
+  let scoresObj = {};
 
-  let learnersIDs = getLearnersID(submissions);
-  const result = [
-    {
-      id: 125,
-      avg: 0.985, // (47 + 150) / (50 + 150)
-      1: 0.94, // 47 / 50
-      2: 1.0, // 150 / 150
-    },
-    {
-      id: 132,
-      avg: 0.82, // (39 + 125) / (50 + 150)
-      1: 0.78, // 39 / 50
-      2: 0.833, // late: (140 - 15) / 150
-    },
-  ];
-  return result;
+  for (let i = 0; i < learnerIDs.length; i++) {
+    let learnerObject = {};
+    let k = 0;
+    learnerObject.id = learnerIDs[i];
+    learnerObject.avg = average[i];
+    learnerObject.one = scores[i][k++];
+    learnerObject.two = scores[i][k++];
+
+    result.push(learnerObject);
+  }
+  console.log(result);
 }
 
 const result = getLearnerData(CourseInfo, AssignmentGroup, LearnerSubmissions);
-
-// console.log(result);
-// console.log(AssignmentGroup.assignments);
-
-const desiredResult = [
-  {
-    id: 125,
-    avg: 0.985, // (47 + 150) / (50 + 150)
-    1: 0.94, // 47 / 50
-    2: 1.0, // 150 / 150
-  },
-  {
-    id: 132,
-    avg: 0.82, // (39 + 125) / (50 + 150)
-    1: 0.78, // 39 / 50
-    2: 0.833, // late: (140 - 15) / 150
-  },
-];
-
-return result;
