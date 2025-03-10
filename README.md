@@ -3,7 +3,7 @@
 <p>A program that gathers course data , processes it, and then outputs a result. 
 The data provided is from CourseInfo, Assignment Group, Assignment Info, and Learner Submission.</p>
 
-<h3>Helper Functions</h3>
+<h3>Functions</h3>
 <ul>
   <li>
     validatErrors - 
