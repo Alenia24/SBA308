@@ -201,6 +201,7 @@ function getScore(submissions, ag) {
               penalty = (10 * assignments[j].points_possible) / 100;
               totalScore += submissions[i].submission.score - penalty;
               assignmentScores.push(submissions[i].submission.score - penalty);
+              continue;
             } else {
               //calculate the total score earned for learner
               totalScore += submissions[i].submission.score;
